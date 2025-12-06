@@ -20,11 +20,18 @@ export const metadata: Metadata = {
   description: "Track daily meals and manage billing",
 };
 
-export default function RootLayout({
+import { syncUser } from "@/actions/auth";
+
+// ... existing imports
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Sync user to DB on every page load
+  await syncUser();
+
   return (
     <ClerkProvider>
       <html lang="en">

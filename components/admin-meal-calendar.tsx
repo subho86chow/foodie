@@ -8,7 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogClose
+} from "@/components/ui/dialog";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
     getCustomersWhoAte,
     getCustomerMeals,
@@ -18,7 +32,7 @@ import {
     deleteMealAdmin
 } from "@/actions/admin-attendance";
 import { toast } from "sonner";
-import { Trash2, Edit2, Plus, Users, ChevronLeft, Loader2 } from "lucide-react";
+import { Trash2, Edit2, Plus, Users, ChevronLeft, Loader2, CalendarIcon } from "lucide-react";
 
 export function AdminMealCalendar() {
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -31,6 +45,7 @@ export function AdminMealCalendar() {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [allCustomers, setAllCustomers] = useState<any[]>([]);
     const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
+    const [addMealDate, setAddMealDate] = useState<Date | undefined>(new Date());
     const [mealName, setMealName] = useState("");
     const [price, setPrice] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,21 +107,27 @@ export function AdminMealCalendar() {
         setSelectedCustomerIds([]);
         setMealName("");
         setPrice("");
+        setAddMealDate(new Date()); // Default to today
         setIsAddOpen(true);
     };
 
     const handleAddMeal = async () => {
-        if (!date || !mealName || !price || selectedCustomerIds.length === 0) {
+        if (!addMealDate || !mealName || !price || selectedCustomerIds.length === 0) {
             toast.error("Please fill all fields and select at least one customer");
             return;
         }
 
         setIsSubmitting(true);
         try {
-            const dateStr = format(date, 'yyyy-MM-dd');
+            const dateStr = format(addMealDate, 'yyyy-MM-dd');
             await addMealForCustomers(selectedCustomerIds, mealName, parseFloat(price), dateStr);
             setIsAddOpen(false);
-            loadCustomersWhoAte();
+
+            // If the added date matches the current view date, reload
+            if (date && format(date, 'yyyy-MM-dd') === dateStr) {
+                loadCustomersWhoAte();
+            }
+
             toast.success(`Meal added for ${selectedCustomerIds.length} customer(s)`);
         } catch (error) {
             toast.error("Failed to add meal");
@@ -169,9 +190,30 @@ export function AdminMealCalendar() {
                             <DialogTitle>Add Meal for Customers</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
-                            <div className="space-y-2">
+                            <div className="space-y-2 flex flex-col">
                                 <Label>Date</Label>
-                                <Input value={date ? format(date, 'PPP') : ''} disabled />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !addMealDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {addMealDate ? format(addMealDate, "PPP") : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={addMealDate}
+                                            onSelect={setAddMealDate}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="space-y-2">
                                 <Label>Meal Name</Label>
@@ -267,8 +309,8 @@ export function AdminMealCalendar() {
                                     <div
                                         key={customer.userId}
                                         className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedCustomer?.userId === customer.userId
-                                                ? 'bg-primary/10 border-primary'
-                                                : 'hover:bg-muted'
+                                            ? 'bg-primary/10 border-primary'
+                                            : 'hover:bg-muted'
                                             }`}
                                         onClick={() => setSelectedCustomer(customer)}
                                     >
