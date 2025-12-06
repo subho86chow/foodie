@@ -170,12 +170,20 @@ export default function MyBillPage() {
                             <div className="space-y-2">
                                 <h3 className="font-semibold text-lg">Breakdown</h3>
                                 {Object.entries(billData.breakdown).map(([name, data]: [string, any]) => (
-                                    <div key={name} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                                        <span className="font-medium">{name}</span>
-                                        <div className="text-right">
-                                            <div className="font-bold">₹{data.total.toFixed(2)}</div>
-                                            <div className="text-xs text-muted-foreground">{data.count} meals</div>
+                                    <div key={name} className="flex flex-col p-4 bg-muted/50 rounded-lg gap-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-medium">{name}</span>
+                                            <div className="text-right">
+                                                <div className="font-bold">₹{data.total.toFixed(2)}</div>
+                                                <div className="text-xs text-muted-foreground">{data.count} meals</div>
+                                            </div>
                                         </div>
+                                        {data.dates && data.dates.length > 0 && (
+                                            <div className="text-xs text-muted-foreground border-t pt-2 mt-1">
+                                                <span className="font-semibold">Date: </span>
+                                                {data.dates.sort().map((d: string) => format(new Date(d), 'MMM d')).join(', ')}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                                 {Object.keys(billData.breakdown).length === 0 && (

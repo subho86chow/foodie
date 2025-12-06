@@ -99,15 +99,16 @@ export async function getMyBill(startDate: string, endDate: string) {
         );
 
     const total = records.reduce((sum, r) => sum + Number(r.price), 0);
-    const breakdown: Record<string, { count: number, total: number }> = {};
+    const breakdown: Record<string, { count: number, total: number, dates: string[] }> = {};
 
     records.forEach(r => {
         const name = r.mealName;
         if (!breakdown[name]) {
-            breakdown[name] = { count: 0, total: 0 };
+            breakdown[name] = { count: 0, total: 0, dates: [] };
         }
         breakdown[name].count++;
         breakdown[name].total += Number(r.price);
+        breakdown[name].dates.push(r.date);
     });
 
     return { total, breakdown };
